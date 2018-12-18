@@ -387,3 +387,42 @@ bool isEthereumLike(const char *coin_name)
 
     return false;
 }
+
+bool coin_isSLIP48(const CoinType *coin, const uint32_t *address_n,
+                   size_t address_n_count, SLIP48Role role) {
+    (void)coin;
+
+    if (address_n_count < 5)
+        return false;
+
+    // Purpose
+    if (address_n[address_n_count - 4] != (0x80000000 | 48))
+        return false;
+
+    // Network
+    if (address_n[address_n_count - 3] != (0x80000000 | /*EOS=*/4))
+        return false;
+
+    // Account Index
+    if (!(address_n[address_n_count - 1] & 0x80000000))
+        return false;
+
+    switch (role) {
+    case SLIP48_owner:
+        return address_n[address_n_count - 2] == (0x80000000 | 0x0);
+
+    case SLIP48_active:
+        return address_n[address_n_count - 2] == (0x80000000 | 0x1);
+
+    case SLIP48_memo:
+        return address_n[address_n_count - 2] == (0x80000000 | 0x3);
+
+    case SLIP48_posting:
+        return address_n[address_n_count - 2] == (0x80000000 | 0x4);
+
+    case SLIP48_UNKNOWN:
+        return false;
+    }
+
+    return false;
+}
